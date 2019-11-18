@@ -96,11 +96,53 @@ func (e *Event) AddParticipant(db *sql.DB, user *User) error {
 		return errors.New("the event's maximum of participants is exceeded")
 	}
 
-	e.Participants = append(e.Participants, user)
-
 	stmt := MYSQL_INSERT_EVENT_USER
 
 	_, err := db.Exec(stmt, user.Id, e.Id)
+	if err != nil {
+		return err
+	}
+
+	e.Participants = append(e.Participants, user)
+
+	return nil
+
+}
+
+func (e *Event) RemoveParticipant(db *sql.DB, user *User) error {
+
+	if len(e.Participants) == 0 {
+		return errors.New("no users are participating at this event")
+	}
+
+	stmt := MYSQL_DELETE_EVENT_USER
+
+	_, err := db.Exec(stmt, user.Id, e.Id)
+	if err != nil {
+		return err
+	}
+
+	// Delete user from participants slice
+	for key, participant := range e.Participants {
+		if participant.Id == user.Id {
+			e.Participants = append(e.Participants[:key], e.Participants[key+1:]...)
+			break
+		}
+	}
+
+	return nil
+
+}
+
+func (e *Event) Delete(db *sql.DB, userId int) error {
+
+	if e.CreatorId != userId {
+		return errors.New("user is not allowed to delete this event")
+	}
+
+	stmt := MYSQL_DELETE_EVENT_BY_ID
+
+	_, err := db.Exec(stmt, e.Id)
 	if err != nil {
 		return err
 	}

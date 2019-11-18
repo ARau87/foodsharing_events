@@ -2,6 +2,7 @@ package main
 
 import (
 	"github.com/ARau87/foodsharing_events/lib"
+	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
 	"github.com/justinas/alice"
 	"log"
@@ -33,9 +34,10 @@ func main(){
 
 	// Event related routes
 	router.Handle("/event", alice.New(app.AuthRequired).Then(http.HandlerFunc(app.createEvent))).Methods("POST")
-	router.Handle("/event/{eventId:[0-9]+}", alice.New(app.AuthRequired).Then(http.HandlerFunc(app.joinEvent))).Methods("PUT")
+	router.Handle("/event/{eventId:[0-9]+}/user/current", alice.New(app.AuthRequired).Then(http.HandlerFunc(app.joinEvent))).Methods("PUT")
+	router.Handle("/event/{eventId:[0-9]+}/user/current", alice.New(app.AuthRequired).Then(http.HandlerFunc(app.leaveEvent))).Methods("DELETE")
 	router.Handle("/event/{eventId:[0-9]+}", alice.New(app.AuthRequired).Then(http.HandlerFunc(app.getEventById))).Methods("GET")
-
+	router.Handle("/event/{eventId:[0-9]+}", alice.New(app.AuthRequired).Then(http.HandlerFunc(app.deleteEvent))).Methods("DELETE")
 
 	app.Logger.Info("Starting server at address :8080")
 	http.ListenAndServe(":8080", router)

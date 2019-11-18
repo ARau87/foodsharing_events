@@ -1,6 +1,7 @@
 package lib
 
 import (
+	"encoding/json"
 	"errors"
 	"github.com/dgrijalva/jwt-go"
 	"time"
@@ -10,6 +11,19 @@ type Claims struct {
 	Id int
 	Email string
 	jwt.StandardClaims
+}
+
+type AccessKey struct {
+	Token string `json:"accessKey"`
+}
+
+func (a *AccessKey) ToJson() ([]byte, error){
+
+	data, err := json.Marshal(a)
+	if err != nil {
+		return nil, err
+	}
+	return data, nil
 }
 
 func (c *Claims) CreateToken(key []byte) (*AccessKey, error){
