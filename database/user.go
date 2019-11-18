@@ -11,6 +11,7 @@ type User struct {
 	Password string `json:"password,omitempty"`
 	Firstname string `json:"firstname"`
 	Lastname string `json:"lastname"`
+	Admin bool `json:"admin"`
 }
 
 func (u *User) ToJson() ([]byte, error){
@@ -38,7 +39,7 @@ func (u *User) Save(db *sql.DB) (*User, error){
 		return nil, err
 	}
 
-	return &User{int(id), u.Email, u.Password, u.Firstname, u.Lastname}, nil
+	return &User{int(id), u.Email, u.Password, u.Firstname, u.Lastname, u.Admin}, nil
 
 }
 
@@ -47,7 +48,7 @@ func (u *User) GetById(db *sql.DB) (*User, error) {
 
 	user := &User{}
 	row := db.QueryRow(stmt, u.Id)
-	err := row.Scan(&user.Id, &user.Email, &user.Firstname, &user.Lastname)
+	err := row.Scan(&user.Id, &user.Email, &user.Firstname, &user.Lastname, &user.Admin)
 	if err != nil {
 		return nil, err
 	}
@@ -60,7 +61,7 @@ func (u *User) GetByCredentials(db *sql.DB) (*User, error) {
 
 	user := &User{}
 	row := db.QueryRow(stmt, u.Email, u.Password)
-	err := row.Scan(&user.Id, &user.Email, &user.Firstname, &user.Lastname)
+	err := row.Scan(&user.Id, &user.Email, &user.Firstname, &user.Lastname, &user.Admin)
 	if err != nil {
 		return nil, err
 	}
