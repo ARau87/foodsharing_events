@@ -58,11 +58,10 @@ func (app *application) register(w http.ResponseWriter, r *http.Request){
 
 	// Send a mail to the sysadmin that a new user registered to the system.
 	snsMessage := fmt.Sprintf("User registered: %s %s - %s\n", created.Firstname, created.Lastname, created.Email)
-	topicArn := "arn:aws:sns:eu-central-1:451558607227:ActivateUserNotification"
 
 	data, err := app.SNSService.Publish(&sns.PublishInput{
 		Message: &snsMessage,
-		TopicArn: &topicArn,
+		TopicArn: &app.Config.RegisteredUserTopic,
 	})
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)

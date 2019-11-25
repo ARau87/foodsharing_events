@@ -1,6 +1,8 @@
 package main
 
 import (
+	"flag"
+	"fmt"
 	"github.com/ARau87/foodsharing_events/lib"
 	_ "github.com/go-sql-driver/mysql"
 	"github.com/gorilla/mux"
@@ -12,16 +14,27 @@ import (
 
 func main(){
 
+	dsn := flag.String("dsn", "root:ttm1306A@/foodsharing?parseTime=true", "The connection string to the database")
+	jwtKey := flag.String("jwt", "supersecretKey", "JWT key used for creating access token")
+	registerUserTopic := flag.String("registered-user-topic", "arn:aws:sns:eu-central-1:451558607227:ActivateUserNotification", "ARN of the SNS topic that is used to inform the sys admin that a new user has registered" )
+	awsProfile := flag.String("aws-profile", "default", "The name of the AWS CLI profile")
+	availabilityZone := flag.String("az", "eu-central-1", "The availability zone of the app")
+
+	flag.Parse()
+
 	app := &application{
 		lib.Logger{
 			Err: log.New(os.Stderr, "[ERROR] ", log.Ldate|log.Ltime|log.Lshortfile),
 			Inf: log.New(os.Stdout, "[INFO] ", log.Ldate|log.Ltime),
 		},
 		nil,
-		[]byte(""),
 		Config{
 			// TODO: Change this to use cli args in production!
-			JwtKey: []byte("supersecretKey"),
+			JwtKey: []byte(*jwtKey),
+			DSN: *dsn,
+			AWSAvailabilityZone: *availabilityZone,
+			AWSProfile: *awsProfile,
+			AWSRegisteredUserSNSTopic: *registerUserTopic,
 		},
 		nil,
 		nil,
@@ -29,6 +42,13 @@ func main(){
 	app.setupDatabaseConnection("mysql", "root:ttm1306A@/foodsharing?parseTime=true")
 	app.setupAwsSession()
 	app.setupSNSService()
+
+	app.Logger.Info(fmt.Sprintf("DSN - %s", *dsn))
+	app.Logger.Info(fmt.Sprintf("JWT-KEY - %s", *jwtKey))
+	app.Logger.Info(fmt.Sprintf("AZ - %s", *availabilityZone))
+	app.Logger.Info(fmt.Sprintf("PROFILE - %s", *awsProfile))
+	app.Logger.Info(fmt.Sprintf("TOPIC - %s", *registerUserTopic))
+
 
 	router := mux.NewRouter()
 

@@ -10,8 +10,8 @@ func (app *application) setupAwsSession(){
 
 	app.AwsSession = session.Must(session.NewSessionWithOptions(
 		session.Options{
-			Profile: "default",
-			Config: aws.Config{Region: aws.String("eu-central-1")},
+			Profile: app.Config.AWSProfile,
+			Config: aws.Config{Region: aws.String(app.Config.AWSAvailabilityZone)},
 		}))
 
 }

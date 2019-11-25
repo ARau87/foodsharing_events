@@ -2,12 +2,10 @@ package main
 
 import (
 	"database/sql"
+	"os"
 
 	"github.com/ARau87/foodsharing_events/database"
 	"github.com/ARau87/foodsharing_events/lib"
-	//"github.com/aws/aws-sdk-go"
-	"os"
-
 	"github.com/aws/aws-sdk-go/aws/session"
 	"github.com/aws/aws-sdk-go/service/sns"
 )
@@ -15,7 +13,6 @@ import (
 type application struct {
 	Logger     lib.Logger
 	Database   *sql.DB
-	JsonData   []byte
 	Config     Config
 	AwsSession *session.Session
 	SNSService *sns.SNS
