@@ -124,6 +124,36 @@ func (app *application) getEventById(w http.ResponseWriter, r *http.Request){
 
 }
 
+func (app *application) getEvents(w http.ResponseWriter, r *http.Request){
+
+	eventId, err := strconv.Atoi(mux.Vars(r)["eventId"])
+	if err != nil {
+		app.Logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+	event := &database.Event{Id: int(eventId)}
+	event, err = event.GetById(app.Database)
+	if err != nil {
+		app.Logger.Error(err)
+		w.WriteHeader(http.StatusBadRequest)
+		return
+	}
+
+	jsonData, err := event.ToJson()
+	if err != nil {
+		app.Logger.Error(err)
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
+
+	w.Header().Set("Content-Type", "application/json")
+	w.WriteHeader(http.StatusOK)
+	w.Write(jsonData)
+
+
+}
+
 func (app *application) leaveEvent(w http.ResponseWriter, r *http.Request){
 
 	eventId, err := strconv.Atoi(mux.Vars(r)["eventId"])

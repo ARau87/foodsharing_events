@@ -20,15 +20,23 @@ func main(){
 		nil,
 		[]byte(""),
 		Config{
+			// TODO: Change this to use cli args in production!
 			JwtKey: []byte("supersecretKey"),
 		},
+		nil,
+		nil,
 	}
 	app.setupDatabaseConnection("mysql", "root:ttm1306A@/foodsharing?parseTime=true")
+	app.setupAwsSession()
+	app.setupSNSService()
 
 	router := mux.NewRouter()
 
+	// Cors
+	router.HandleFunc("/auth/login", app.cors).Methods("OPTIONS")
+
 	// Authentication related routes
-	router.HandleFunc("/auth/login", app.login).Methods("POST")
+	router.Handle("/auth/login", alice.New(app.AllowCors).Then(http.HandlerFunc(app.login))).Methods("POST")
 	router.HandleFunc("/auth/register", app.register).Methods("POST")
 	router.Handle("/auth", alice.New(app.AuthRequired).Then(http.HandlerFunc(app.currentUser))).Methods("GET")
 

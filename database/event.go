@@ -4,12 +4,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"errors"
+	"time"
 )
 
 type Event struct {
 	Id int `json:"id"`
 	Name string `json:"name"`
 	Description string `json:"description"`
+	Date time.Time `json:"date"`
 	City string `json:"city"`
 	Address string `json:"address"`
 	GpsLat string `json:"gps_lat,omitempty"`
@@ -23,7 +25,7 @@ func (e *Event) Save(db *sql.DB) (*Event, error){
 
 	stmt := MYSQL_INSERT_EVENT
 
-	result, err := db.Exec(stmt,e.Name, e.Description, e.City, e.Address, e.GpsLat, e.GpsLong, e.CreatorId, e.MaxParticipants)
+	result, err := db.Exec(stmt,e.Name, e.Date, e.Description, e.City, e.Address, e.GpsLat, e.GpsLong, e.CreatorId, e.MaxParticipants)
 	if err != nil {
 		return nil, err
 	}
@@ -33,7 +35,7 @@ func (e *Event) Save(db *sql.DB) (*Event, error){
 		return nil, err
 	}
 
-	return &Event{int(id), e.Name, e.Description, e.City, e.Address, e.GpsLat, e.GpsLong, e.CreatorId, e.MaxParticipants, e.Participants}, nil
+	return &Event{int(id), e.Name, e.Description, e.Date, e.City, e.Address, e.GpsLat, e.GpsLong, e.CreatorId, e.MaxParticipants, e.Participants}, nil
 
 }
 
@@ -45,7 +47,7 @@ func (e *Event) GetById(db *sql.DB) (*Event, error) {
 	// Get event data
 	event := &Event{}
 	row := db.QueryRow(stmt, e.Id)
-	err := row.Scan(&event.Id, &event.Name, &event.Description, &event.City, &event.Address, &event.GpsLat, &event.GpsLong, &event.CreatorId, &event.MaxParticipants)
+	err := row.Scan(&event.Id, &event.Name, &event.Date, &event.Description, &event.City, &event.Address, &event.GpsLat, &event.GpsLong, &event.CreatorId, &event.MaxParticipants)
 	if err != nil {
 		return nil, err
 	}
@@ -76,6 +78,35 @@ func (e *Event) GetById(db *sql.DB) (*Event, error) {
 	event.Participants = participants
 
 	return event, nil
+
+}
+
+func (e *Event) GetFirstOneHundred(db *sql.DB) ([]*Event, error) {
+
+	stmt := MYSQL_SELECT_EVENT_FIRST_100
+
+	rows, err := db.Query(stmt, e.Id)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	events := []*Event{}
+	for rows.Next() {
+		event := &Event{}
+		err := rows.Scan(&event.Id, &event.Name, &event.Date, &event.Description, &event.City, &event.Address, &event.GpsLat, &event.GpsLong, &event.CreatorId, &event.MaxParticipants)
+		if err != nil {
+			return nil, err
+		}
+		events = append(events, event)
+	}
+
+	err = rows.Err()
+	if err != nil {
+		return nil, err
+	}
+
+	return events, nil
 
 }
 

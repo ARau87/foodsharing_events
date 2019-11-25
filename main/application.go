@@ -2,20 +2,26 @@ package main
 
 import (
 	"database/sql"
+
 	"github.com/ARau87/foodsharing_events/database"
 	"github.com/ARau87/foodsharing_events/lib"
+	//"github.com/aws/aws-sdk-go"
 	"os"
+
+	"github.com/aws/aws-sdk-go/aws/session"
+	"github.com/aws/aws-sdk-go/service/sns"
 )
 
 type application struct {
-
-	Logger lib.Logger
-	Database *sql.DB
-	JsonData []byte
-	Config Config
+	Logger     lib.Logger
+	Database   *sql.DB
+	JsonData   []byte
+	Config     Config
+	AwsSession *session.Session
+	SNSService *sns.SNS
 }
 
-func (app *application) setupDatabaseConnection(driver,dsn string){
+func (app *application) setupDatabaseConnection(driver, dsn string) {
 
 	db, err := sql.Open(driver, dsn)
 	if err != nil {
@@ -27,10 +33,10 @@ func (app *application) setupDatabaseConnection(driver,dsn string){
 
 }
 
-func (app *application)CreateJsonToken(user *database.User) ([]byte, error){
+func (app *application) CreateJsonToken(user *database.User) ([]byte, error) {
 	claims := lib.Claims{
 		Email: user.Email,
-		Id: user.Id,
+		Id:    user.Id,
 	}
 
 	token, err := claims.CreateToken(app.Config.JwtKey)
@@ -53,8 +59,7 @@ func (app *application) CurrentUser(key *lib.AccessKey) (*database.User, error) 
 		return nil, err
 	}
 
-
-	user := &database.User{Id:claims.Id}
+	user := &database.User{Id: claims.Id}
 	user, err = user.GetById(app.Database)
 	if err != nil {
 		return nil, err

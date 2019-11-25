@@ -2,7 +2,9 @@ package main
 
 import (
 	"encoding/json"
+	"fmt"
 	"github.com/ARau87/foodsharing_events/database"
+	"github.com/aws/aws-sdk-go/service/sns"
 	"github.com/gorilla/context"
 	"net/http"
 )
@@ -14,6 +16,7 @@ func (app *application) login(w http.ResponseWriter, r *http.Request)  {
 	if err != nil {
 		app.Logger.Error(err)
 		w.WriteHeader(http.StatusBadRequest)
+		return
 	}
 
 	foundUser, err := user.GetByCredentials(app.Database)
@@ -53,6 +56,22 @@ func (app *application) register(w http.ResponseWriter, r *http.Request){
 		return
 	}
 
+	// Send a mail to the sysadmin that a new user registered to the system.
+	snsMessage := fmt.Sprintf("User registered: %s %s - %s\n", created.Firstname, created.Lastname, created.Email)
+	topicArn := "arn:aws:sns:eu-central-1:451558607227:ActivateUserNotification"
+
+	data, err := app.SNSService.Publish(&sns.PublishInput{
+		Message: &snsMessage,
+		TopicArn: &topicArn,
+	})
+	if err != nil {
+		w.WriteHeader(http.StatusInternalServerError)
+		app.Logger.Error(err)
+		return
+	} else {
+		app.Logger.Info(data.String())
+	}
+
 	token, err := app.CreateJsonToken(created)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
@@ -78,5 +97,14 @@ func (app *application) currentUser(w http.ResponseWriter, r *http.Request){
 
 	w.Header().Set("Content-Type","application/json")
 	w.Write(jsonData)
+
+}
+
+func (app *application) cors(w http.ResponseWriter, r *http.Request){
+
+	w.Header().Set("Access-Control-Allow-Origin", "*")
+	w.Header().Set("Access-Control-Allow-Methods", "*")
+	w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+	w.WriteHeader(http.StatusOK)
 
 }
