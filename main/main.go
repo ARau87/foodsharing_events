@@ -14,9 +14,9 @@ import (
 
 func main(){
 
-	dsn := flag.String("dsn", "root:ttm1306A@/foodsharing?parseTime=true", "The connection string to the database")
+	dsn := flag.String("dsn", "", "The connection string to the database")
 	jwtKey := flag.String("jwt", "supersecretKey", "JWT key used for creating access token")
-	registerUserTopic := flag.String("registered-user-topic", "arn:aws:sns:eu-central-1:451558607227:ActivateUserNotification", "ARN of the SNS topic that is used to inform the sys admin that a new user has registered" )
+	registerUserTopic := flag.String("registered-user-topic", "", "ARN of the SNS topic that is used to inform the sys admin that a new user has registered" )
 	awsProfile := flag.String("aws-profile", "default", "The name of the AWS CLI profile")
 	availabilityZone := flag.String("az", "eu-central-1", "The availability zone of the app")
 
@@ -39,7 +39,7 @@ func main(){
 		nil,
 		nil,
 	}
-	app.setupDatabaseConnection("mysql", "root:ttm1306A@/foodsharing?parseTime=true")
+	app.setupDatabaseConnection("mysql", "")
 	app.setupAwsSession()
 	app.setupSNSService()
 
